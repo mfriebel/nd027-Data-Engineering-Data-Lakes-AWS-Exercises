@@ -1,8 +1,8 @@
 ### 
 # You might have noticed this code in the screencast.
 #
-# import findspark
-# findspark.init('spark-2.3.2-bin-hadoop2.7')
+import findspark
+findspark.init('/opt/homebrew/Cellar/apache-spark/3.5.0/libexec')
 #
 # The findspark Python module makes it easier to install
 # Spark in local mode on your computer. This is convenient
@@ -12,9 +12,13 @@
 #
 ###
 
-import pyspark
-sc = pyspark.SparkContext(appName="maps_and_lazy_evaluation_example")
+from pyspark.sql import SparkSession
 
+# Because we aren't running on a spark cluster, the session is just for development
+spark = SparkSession \
+    .builder \
+    .appName("Maps and Lazy Evaluation Example") \
+    .getOrCreate()
 
 # Starting off with a regular python list
 log_of_songs = [
@@ -30,10 +34,10 @@ log_of_songs = [
 ]
 
 # parallelize the log_of_songs to use with Spark
-
+dist_log_of_songs = spark.sparkContext.parallelize(log_of_songs)
 
 # show the original input data is preserved
-
+dist_log_of_songs.foreach(print)
 
 # create a python function to convert strings to lowercase
 def convert_song_to_lowercase(song):
@@ -42,9 +46,10 @@ def convert_song_to_lowercase(song):
 print(convert_song_to_lowercase("Songtitle"))
 
 # use the map function to transform the list of songs with the python function that converts strings to lowercase
-
+dist_log_of_songs.map(convert_song_to_lowercase)
 
 # Show the original input data is still mixed case
-
+dist_log_of_songs.foreach(print)
 
 # Use lambda functions instead of named functions to do the same map operation
+dist_log_of_songs.map(lambda song: song.lower())
